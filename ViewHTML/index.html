@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD API</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <h1>Cadastrar</h1>
+
+    <form method="POST">
+        <input type="hidden" name="contatoId" id="contatoId" value="">
+        <div class="form-group">
+            <label for="Nome">Nome:
+                <input type="text" name="Nome" id="Nome" class="form-control">
+            </label>
+        </div>
+        <div class="form-group"></div>
+            <label for="Telefone">Telefone:
+                <input type="text" name="Telefone" id="Telefone" class="form-control">
+            </label>
+        </div>
+        <br>
+        <input type="submit" class="btn btn-primary" value="Salvar" onclick="salvar()">
+    </form>
+
+    <hr>
+
+    <h1>Agenda</h1>
+
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Telefone</th>
+                <th scope="col">Alterar</th>
+                <th scope="col">Excluir</th>
+            </tr>
+        </thead>
+        <tbody id="data">
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+
+            </tbody>
+    </table>
+</body>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script>
+    
+    const url = 'http://localhost:3000/api/contatos';
+
+    async function getContent() {
+
+        try {
+            const response = await fetch(url)   
+            //console.log(response)
+            const data = await response.json()
+            console.log(data)
+            
+
+            show(data)
+            
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    getContent();
+
+    function show(contacts) {
+
+        let table = document.querySelector('#data')
+        let output = ''
+
+        for ( let contact of contacts ) {
+            output += `<tr>
+                        <td>${contact.nome}</td>
+                        <td>${contact.telefone}</td>
+                        <td><button class="btn btn-secondary btn-sm" onclick="alterar(${contact.id})">Alterar</button></td>
+                        <td><button class="btn btn-danger btn-sm" onclick="excluir(${contact.id})">Excluir</button></td>
+                       </tr>`
+        }
+        
+
+        table.innerHTML = output
+    }
+
+    async function alterar(id){
+
+        try {
+            const response = await fetch(url+'/'+id)
+            //console.log(response)
+            const contato = await response.json()
+            //console.log(contato)
+            
+            document.querySelector('#contatoId').value = contato.id
+            document.querySelector('#Nome').value = contato.nome
+            document.querySelector('#Telefone').value = contato.telefone
+            
+            
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    function excluir(id){
+        
+        fetch(url+ '/' + id, {
+                method: "delete",
+            })
+            .then(data => {
+                if (data.ok) {
+                    getContent()
+                } else {
+                    data.json().then(data => {
+                        if (data.error) {
+                            console.log({ erro: data.error });
+                        }
+                    });
+                }
+            })
+            .catch(erro =>  ({ erro: erro }));
+    }
+
+    function salvar(){
+        var contato = {
+            id: document.querySelector('#contatoId').value,
+            nome: document.querySelector('#Nome').value,
+            telefone: document.querySelector('#Telefone').value
+        }
+
+        
+
+        if(!Number(contato.id) || contato.id == ''){
+            fetch(url, {
+                method: "POST",
+                body: JSON.stringify(contato),
+                headers: {
+                "Content-Type": "application/json"
+                }
+            })
+                .then(data => {
+                if (data.ok) {
+                    location.reload();
+                } else {
+                    data.json().then(data => {
+                    if (data.error) {
+                        console.log(data.error);
+                    }
+                    });
+                }
+                })
+                .catch(erro => ({ erro: erro }));
+        } else {
+            fetch(url+'/'+contato.id, {
+                method: "PUT",
+                body: JSON.stringify(contato),
+                headers: {
+                "Content-Type": "application/json"
+                }
+            })
+                .then(data => {
+                if (data.ok) {
+                    location.reload();
+                } else {
+                    data.json().then(data => {
+                    if (data.error) {
+                        console.log(data.error);
+                    }
+                    });
+                }
+                })
+                .catch(erro => ({ erro: erro }));
+        }
+    }
+    
+</script>
+</html>
